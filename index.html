@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>📝 Travel Schedule</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
@@ -21,6 +24,8 @@
             color: var(--dark-text);
             margin: 0;
             padding: 0;
+            /* เพิ่มเพื่อให้เลื่อนลื่นขึ้น */
+            scroll-behavior: smooth; 
         }
 
         header {
@@ -41,20 +46,18 @@
             position: relative;
         }
 
-        /* Timeline Styles */
         .timeline {
             position: relative;
             padding: 0;
             list-style: none;
         }
 
-        /* เส้นแกนกลาง */
         .timeline::before {
             content: '';
             position: absolute;
             top: 0;
             bottom: 0;
-            left: 20px; /* Mobile View */
+            left: 20px;
             width: 4px;
             background: #ddd;
             border-radius: 2px;
@@ -63,13 +66,19 @@
         .timeline-item {
             position: relative;
             margin-bottom: 40px;
-            padding-left: 60px; /* Mobile View */
+            padding-left: 60px;
+            /* เพิ่ม Animation ตอนโหลด */
+            animation: fadeIn 0.5s ease forwards;
         }
 
-        /* จุดกลมๆ บนเส้น */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         .timeline-marker {
             position: absolute;
-            left: 11px; /* จัดกึ่งกลางเส้น (20px) - ครึ่งหนึ่งของ marker (22px/2) + border adjustment */
+            left: 11px;
             top: 0;
             width: 22px;
             height: 22px;
@@ -85,7 +94,7 @@
             padding: 20px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.05);
             border-left: 5px solid var(--primary-orange);
-            transition: transform 0.2s;
+            transition: transform 0.2s, box-shadow 0.2s;
         }
 
         .timeline-content:hover {
@@ -104,60 +113,27 @@
             margin-bottom: 10px;
         }
 
-        .date-header {
-            font-size: 1.2em;
-            color: #777;
-            margin-bottom: 15px;
-            border-bottom: 2px dashed #eee;
-            padding-bottom: 5px;
-            display: none; /* ซ่อนไว้ก่อน จะโชว์เฉพาะตัวแรกของวัน */
-        }
-        
-        .date-header.show {
-            display: block;
-        }
-
         h3 { margin: 0 0 10px 0; color: #E65100; }
         p { margin: 0; line-height: 1.6; color: #555; }
 
         .activity-img {
             width: 100%;
-            height: 200px;
+            height: auto; /* เปลี่ยนเป็น auto เพื่อไม่ให้รูปเบี้ยว */
+            max-height: 300px;
             object-fit: cover;
             border-radius: 8px;
             margin-top: 15px;
-            display: none; /* ซ่อนถ้าไม่มีรูป */
+            display: block; /* แก้จาก none เป็น block */
         }
 
-        /* Loading State */
         #loading { text-align: center; padding: 50px; color: #888; }
 
-        /* Responsive for Desktop */
         @media (min-width: 768px) {
             .timeline::before { left: 50%; margin-left: -2px; }
-            
-            .timeline-item {
-                width: 50%;
-                padding-left: 0;
-                padding-right: 40px;
-                left: 0;
-            }
-            
-            .timeline-item:nth-child(even) {
-                left: 50%;
-                padding-left: 40px;
-                padding-right: 0;
-            }
-
-            .timeline-item:nth-child(even) .timeline-content {
-                border-left: none;
-                border-right: 5px solid var(--primary-orange);
-            }
-
-            .timeline-marker {
-                left: 50%;
-                margin-left: -11px;
-            }
+            .timeline-item { width: 50%; padding-left: 0; padding-right: 40px; left: 0; }
+            .timeline-item:nth-child(even) { left: 50%; padding-left: 40px; padding-right: 0; }
+            .timeline-item:nth-child(even) .timeline-content { border-left: none; border-right: 5px solid var(--primary-orange); }
+            .timeline-marker { left: 50%; margin-left: -11px; }
         }
     </style>
 </head>
@@ -170,87 +146,70 @@
 
 <div class="container">
     <div id="loading"><i class="fas fa-spinner fa-spin"></i> กำลังโหลดข้อมูล...</div>
-    <ul class="timeline" id="timeline-container">
-        </ul>
+    <ul class="timeline" id="timeline-container"></ul>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js" defer></script>
 
 <script>
-    // ==========================================
-    // 🟠 แก้ไขลิ้งค์ CSV ของคุณตรงนี้ (จากขั้นตอนที่ 1)
-    // ==========================================
     const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnYu4EMm4xlYqKA0PuPDVRU6-X7H7aCkXm70gokacZ-vPPa-J9-QXzQb5O-m7sGTdHZbE_9cE_sd5/pub?gid=0&single=true&output=csv'; 
 
+    // ใช้ DOMContentLoaded เพื่อให้แน่ใจว่าโหลด HTML เสร็จก่อนรัน Script
+    document.addEventListener('DOMContentLoaded', () => {
+        if(SHEET_CSV_URL) {
+            init();
+        }
+    });
+
     function init() {
-        Papa.parse(SHEET_CSV_URL, {
-            download: true,
-            header: true,
-            complete: function(results) {
-                renderTimeline(results.data);
-            },
-            error: function(err) {
-                document.getElementById('loading').innerHTML = "เกิดข้อผิดพลาดในการโหลดข้อมูล";
-                console.error(err);
+        // เช็คว่า Papa loaded หรือยัง (เพราะใช้ defer)
+        const checkPapa = setInterval(() => {
+            if (typeof Papa !== 'undefined') {
+                clearInterval(checkPapa);
+                Papa.parse(SHEET_CSV_URL, {
+                    download: true,
+                    header: true,
+                    complete: function(results) {
+                        renderTimeline(results.data);
+                    },
+                    error: function(err) {
+                        document.getElementById('loading').innerHTML = "เกิดข้อผิดพลาดในการโหลดข้อมูล";
+                    }
+                });
             }
-        });
+        }, 100);
     }
 
     function renderTimeline(data) {
         const container = document.getElementById('timeline-container');
         const loading = document.getElementById('loading');
+        loading.style.display = 'none';
         
-        loading.style.display = 'none'; // ซ่อน Loading
-        
-        // เรียงลำดับตามวันและเวลา
-        data.sort((a, b) => {
+        // กรองแถวที่ไม่มีกิจกรรมออกก่อนเรียงลำดับ
+        const cleanData = data.filter(item => item.Activity && item.Activity.trim() !== "");
+
+        cleanData.sort((a, b) => {
             return new Date(a.Date + ' ' + a.Time) - new Date(b.Date + ' ' + b.Time);
         });
 
-        let lastDate = '';
-
-        data.forEach(item => {
-            // ข้ามแถวว่าง
-            if(!item.Activity) return; 
-
-            // ตรวจสอบว่าเป็นวันใหม่หรือไม่
-            let dateHeaderHTML = '';
-            if (item.Date !== lastDate) {
-                // แปลงวันที่ให้สวยงาม
-                const dateObj = new Date(item.Date);
-                const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-                const dateStr = dateObj.toLocaleDateString('th-TH', options);
-                
-                // สำหรับมือถือเราอาจจะโชว์วันที่ใน Card เลย หรือทำ Logic แยก
-                // ในที่นี้เราจะเช็คใน Logic การแสดงผล
-                lastDate = item.Date;
-            }
-
+        cleanData.forEach(item => {
             const li = document.createElement('li');
             li.className = 'timeline-item';
 
-            // ตรวจสอบรูปภาพ
-            const imgHTML = item.Image ? `<img src="${item.Image}" class="activity-img" alt="image">` : '';
+            // 3. เพิ่ม loading="lazy" ในรูปภาพเพื่อความไว
+            const imgHTML = item.Image ? `<img src="${item.Image}" class="activity-img" alt="${item.Activity}" loading="lazy">` : '';
 
             li.innerHTML = `
                 <div class="timeline-marker"></div>
                 <div class="timeline-content">
                     <div class="time-badge"><i class="far fa-clock"></i> ${item.Date} | ${item.Time} น.</div>
                     <h3>${item.Activity}</h3>
-                    <p>${item.Description}</p>
+                    <p>${item.Description || ''}</p>
                     ${imgHTML}
                 </div>
             `;
-
             container.appendChild(li);
         });
-    }
-
-    // เริ่มทำงาน
-    if(SHEET_CSV_URL !== 'YOUR_GOOGLE_SHEET_CSV_LINK_HERE') {
-        init();
-    } else {
-        document.getElementById('loading').innerHTML = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnYu4EMm4xlYqKA0PuPDVRU6-X7H7aCkXm70gokacZ-vPPa-J9-QXzQb5O-m7sGTdHZbE_9cE_sd5/pub?gid=0&single=true&output=csv";
     }
 </script>
 
