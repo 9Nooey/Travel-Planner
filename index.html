@@ -34,7 +34,7 @@
             padding: 30px 20px;
             text-align: center;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            position: sticky; /* ทำให้ Header ติดด้านบนตลอดเวลา */
+            position: sticky;
             top: 0;
             z-index: 1000;
         }
@@ -83,7 +83,7 @@
             margin-bottom: 40px;
             padding-left: 60px;
             animation: fadeIn 0.5s ease forwards;
-            transition: all 0.5s ease; /* Smooth transition for status change */
+            transition: all 0.5s ease;
         }
 
         @keyframes fadeIn {
@@ -142,55 +142,37 @@
             display: block;
         }
 
-        #loading { text-align: center; padding: 50px; color: #888; }
+        #loading { text-align: center; padding: 50px; color: #888; font-size: 1.1em; }
+        .error-message { color: red; text-align: center; padding: 20px; background: #fff0f0; border-radius: 8px; }
 
-        /* --- Styles สำหรับสถานะเวลา (เพิ่มใหม่) --- */
+        /* --- Styles สถานะ --- */
+        /* อดีต */
+        .timeline-item.past { opacity: 0.5; }
+        .timeline-item.past .timeline-content { filter: grayscale(100%); box-shadow: none; }
+        .timeline-item.past .timeline-marker { border-color: #ccc; background: #eee; }
 
-        /* 1. อดีต (Past): จางลงและเป็นขาวดำ */
-        .timeline-item.past {
-            opacity: 0.4;
-        }
-        .timeline-item.past .timeline-content {
-            filter: grayscale(100%);
-            box-shadow: none;
-        }
-        .timeline-item.past .timeline-marker {
-            border-color: #ccc;
-            background: #eee;
-        }
-
-        /* 2. ปัจจุบัน (Active): เด่นขึ้น */
-        .timeline-item.active {
-            z-index: 10;
-        }
+        /* ปัจจุบัน */
+        .timeline-item.active { z-index: 10; }
         .timeline-item.active .timeline-content {
-            transform: scale(1.05); /* ขยายใหญ่ */
-            box-shadow: 0 0 25px var(--active-glow); /* เรืองแสง */
-            border-left: 8px solid #FF4500; /* ขอบหนาขึ้นและสีสดขึ้น */
+            transform: scale(1.05);
+            box-shadow: 0 0 25px var(--active-glow);
+            border-left: 8px solid #FF4500;
             background-color: #fff;
         }
         .timeline-item.active .timeline-marker {
             background: #FF4500;
             box-shadow: 0 0 15px #FF4500;
-            transform: scale(1.3); /* จุดใหญ่ขึ้น */
+            transform: scale(1.3);
             border-color: #fff;
         }
-        .timeline-item.active .time-badge {
-            background: #FF4500;
-            color: white;
-        }
+        .timeline-item.active .time-badge { background: #FF4500; color: white; }
 
         @media (min-width: 768px) {
             .timeline::before { left: 50%; margin-left: -2px; }
             .timeline-item { width: 50%; padding-left: 0; padding-right: 40px; left: 0; }
             .timeline-item:nth-child(even) { left: 50%; padding-left: 40px; padding-right: 0; }
             .timeline-item:nth-child(even) .timeline-content { border-left: none; border-right: 5px solid var(--primary-orange); }
-            
-            /* ปรับ Active สำหรับ Desktop ให้ Border ถูกฝั่ง */
-            .timeline-item.active:nth-child(even) .timeline-content {
-                border-right: 8px solid #FF4500;
-            }
-
+            .timeline-item.active:nth-child(even) .timeline-content { border-right: 8px solid #FF4500; }
             .timeline-marker { left: 50%; margin-left: -11px; }
         }
     </style>
@@ -200,7 +182,7 @@
 <header>
     <h1><i class="fas fa-plane-departure"></i> Travel Schedule 📝</h1>
     <p>Timetable ✈️</p>
-    <div id="live-clock">--:--:--</div>
+    <div id="live-clock">Loading...</div>
 </header>
 
 <div class="container">
@@ -208,51 +190,52 @@
     <ul class="timeline" id="timeline-container"></ul>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
 
 <script>
+    // URL ของ Google Sheet (CSV) ที่คุณให้มา
     const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnYu4EMm4xlYqKA0PuPDVRU6-X7H7aCkXm70gokacZ-vPPa-J9-QXzQb5O-m7sGTdHZbE_9cE_sd5/pub?gid=0&single=true&output=csv'; 
 
     document.addEventListener('DOMContentLoaded', () => {
-        // เริ่มต้นนาฬิกาทันที
-        updateClock();
-        setInterval(updateClock, 1000);
-
-        if(SHEET_CSV_URL) {
-            init();
-        }
+        startClock();
+        loadSheetData();
     });
 
-    // ฟังก์ชันอัปเดตนาฬิกาบน Header และเช็คสถานะ Timeline
+    function startClock() {
+        updateClock();
+        setInterval(updateClock, 1000);
+    }
+
     function updateClock() {
         const now = new Date();
-        // แสดงเวลา
         const timeString = now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        const dateString = now.toLocaleDateString('th-TH', { weekday: 'short', day: 'numeric', month: 'short' });
+        const dateString = now.toLocaleDateString('th-TH', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
         
         const clockEl = document.getElementById('live-clock');
         if(clockEl) clockEl.innerHTML = `${dateString} ${timeString}`;
 
-        // อัปเดตสถานะ Timeline (Past/Active)
         updateTimelineStatus(now);
     }
 
-    function init() {
-        const checkPapa = setInterval(() => {
-            if (typeof Papa !== 'undefined') {
-                clearInterval(checkPapa);
-                Papa.parse(SHEET_CSV_URL, {
-                    download: true,
-                    header: true,
-                    complete: function(results) {
-                        renderTimeline(results.data);
-                    },
-                    error: function(err) {
-                        document.getElementById('loading').innerHTML = "เกิดข้อผิดพลาดในการโหลดข้อมูล";
-                    }
-                });
+    function loadSheetData() {
+        Papa.parse(SHEET_CSV_URL, {
+            download: true,
+            header: true,
+            skipEmptyLines: true,
+            transformHeader: function(h) {
+                return h.trim(); // ลบช่องว่างหัวตารางกันพลาด เช่น "Time " -> "Time"
+            },
+            complete: function(results) {
+                if (results.data && results.data.length > 0) {
+                    renderTimeline(results.data);
+                } else {
+                    showError("โหลดข้อมูลสำเร็จ แต่ไม่พบรายการในตาราง (ตรวจสอบว่ามีข้อมูลหรือไม่)");
+                }
+            },
+            error: function(err) {
+                showError("โหลดข้อมูลไม่สำเร็จ: " + err.message + " (ตรวจสอบว่า Publish to web หรือยัง)");
             }
-        }, 100);
+        });
     }
 
     function renderTimeline(data) {
@@ -260,19 +243,29 @@
         const loading = document.getElementById('loading');
         loading.style.display = 'none';
         
-        const cleanData = data.filter(item => item.Activity && item.Activity.trim() !== "");
-
-        cleanData.sort((a, b) => {
-            return new Date(a.Date + ' ' + a.Time) - new Date(b.Date + ' ' + b.Time);
+        // กรองแถวว่าง และแปลงวันที่
+        const cleanData = data.filter(item => item.Activity && item.Activity.trim() !== "").map(item => {
+            // สร้าง object วันที่ที่ถูกต้อง
+            const dateObj = parseCustomDate(item.Date, item.Time);
+            return { ...item, _dateObj: dateObj };
         });
+
+        // เรียงลำดับตามเวลา
+        cleanData.sort((a, b) => a._dateObj - b._dateObj);
+
+        if (cleanData.length === 0) {
+            showError("ไม่พบข้อมูล Activity (ตรวจสอบชื่อหัวตาราง: Date, Time, Activity)");
+            return;
+        }
 
         cleanData.forEach(item => {
             const li = document.createElement('li');
             li.className = 'timeline-item';
             
-            // เก็บข้อมูลเวลาไว้ใน Attribute เพื่อใช้เปรียบเทียบภายหลัง
-            const itemDateTime = new Date(item.Date + ' ' + item.Time);
-            li.setAttribute('data-dt', itemDateTime.toISOString());
+            // เก็บเวลาใน Attribute สำหรับเช็ค Active/Past
+            if (item._dateObj) {
+                li.setAttribute('data-dt', item._dateObj.toISOString());
+            }
 
             const imgHTML = item.Image ? `<img src="${item.Image}" class="activity-img" alt="${item.Activity}" loading="lazy">` : '';
 
@@ -288,44 +281,71 @@
             container.appendChild(li);
         });
 
-        // เรียก update status ครั้งแรกทันทีหลัง render เสร็จ
+        // อัพเดทสถานะทันทีหลังสร้างเสร็จ
         updateTimelineStatus(new Date());
     }
 
-    // ฟังก์ชันคำนวณว่าอันไหนเป็น Past หรือ Active
+    // ฟังก์ชันแปลงวันที่ แบบรองรับ DD/MM/YYYY และ ปีพ.ศ.
+    function parseCustomDate(dateStr, timeStr) {
+        if (!dateStr || !timeStr) return new Date(8640000000000000); // ถ้าไม่มีค่า ส่งไปไกลสุดกู่
+
+        // ลองแปลงแบบมาตรฐานก่อน (YYYY-MM-DD)
+        let d = new Date(`${dateStr}T${timeStr}`);
+        if (!isNaN(d.getTime())) return d;
+
+        // ถ้าไม่ได้ ลองแปลงแบบ DD/MM/YYYY
+        // รองรับตัวคั่น / หรือ -
+        const parts = dateStr.split(/[\/\-]/); 
+        if (parts.length === 3) {
+            let day = parseInt(parts[0], 10);
+            let month = parseInt(parts[1], 10) - 1; // เดือนเริ่มที่ 0
+            let year = parseInt(parts[2], 10);
+
+            // แก้ปี พ.ศ. (ถ้ามากกว่า 2400 ให้ลบ 543)
+            if (year > 2400) year -= 543;
+            // แก้ปี ค.ศ. 2 หลัก (เช่น 26 -> 2026)
+            if (year < 100) year += 2000;
+
+            // รวมเวลา
+            const timeParts = timeStr.split(':');
+            let hour = parseInt(timeParts[0], 10);
+            let minute = parseInt(timeParts[1], 10);
+
+            return new Date(year, month, day, hour, minute);
+        }
+        
+        return new Date(); // ถ้าแปลงไม่ได้เลย ให้เป็นเวลาปัจจุบัน (กัน Error)
+    }
+
     function updateTimelineStatus(now) {
         const items = document.querySelectorAll('.timeline-item');
         let activeIndex = -1;
 
-        // หาว่ากิจกรรมไหนคือกิจกรรมล่าสุดที่เวลาเริ่มไปแล้ว (หรือกำลังทำอยู่)
         items.forEach((item, index) => {
             const dtStr = item.getAttribute('data-dt');
             if(!dtStr) return;
-            
             const itemTime = new Date(dtStr);
             
-            // ถ้าเวลาปัจจุบัน มากกว่าหรือเท่ากับ เวลากิจกรรม -> ถือว่าเริ่มไปแล้ว
+            // ถ้าเวลาปัจจุบัน >= เวลากิจกรรม แสดงว่ากิจกรรมนั้นเริ่มแล้ว
             if (now >= itemTime) {
                 activeIndex = index;
             }
         });
 
-        // วนลูปเพื่อใส่ Class
         items.forEach((item, index) => {
             item.classList.remove('past', 'active');
-
             if (index < activeIndex) {
-                // กิจกรรมก่อนหน้า "ปัจจุบัน" -> เป็นอดีต (Past)
                 item.classList.add('past');
             } else if (index === activeIndex) {
-                // กิจกรรมล่าสุดที่เวลาผ่านไปแล้ว -> กำลังทำอยู่ (Active)
                 item.classList.add('active');
-                
-                // (Option) ถ้าต้องการให้ Scroll ไปหาอันที่ Active อัตโนมัติในครั้งแรก
-                // item.scrollIntoView({behavior: "smooth", block: "center"}); 
             }
-            // index > activeIndex คืออนาคต (ปล่อยปกติ)
         });
+    }
+
+    function showError(msg) {
+        const loading = document.getElementById('loading');
+        loading.innerHTML = `<div class="error-message"><i class="fas fa-exclamation-circle"></i> ${msg}</div>`;
+        loading.style.display = 'block';
     }
 </script>
 
