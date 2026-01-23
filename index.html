@@ -21,7 +21,7 @@
 
         body {
             font-family: 'Kanit', sans-serif;
-            background-color: #f9f9f9;
+            background-color: #f4f6f8;
             color: var(--dark-text);
             margin: 0;
             padding: 0;
@@ -31,34 +31,32 @@
         header {
             background: linear-gradient(135deg, #FF6F00, #FF8C00);
             color: var(--white);
-            padding: 30px 20px;
+            padding: 25px 20px;
             text-align: center;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
             position: sticky;
             top: 0;
             z-index: 1000;
         }
 
-        header h1 { margin: 0; font-size: 2.2em; }
-        header p { margin-top: 5px; font-size: 1em; opacity: 0.9; }
-
+        header h1 { margin: 0; font-size: 2em; }
+        
         /* นาฬิกา Real-time */
         #live-clock {
-            font-size: 1.5em;
+            font-size: 1.3em;
             font-weight: 600;
-            background: rgba(255, 255, 255, 0.2);
-            padding: 5px 15px;
-            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.25);
+            padding: 5px 20px;
+            border-radius: 30px;
             display: inline-block;
             margin-top: 10px;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+            backdrop-filter: blur(5px);
         }
 
         .container {
             max-width: 800px;
-            margin: 40px auto;
+            margin: 30px auto;
             padding: 0 20px;
-            position: relative;
         }
 
         .timeline {
@@ -67,6 +65,7 @@
             list-style: none;
         }
 
+        /* เส้นแกนกลาง */
         .timeline::before {
             content: '';
             position: absolute;
@@ -74,23 +73,18 @@
             bottom: 0;
             left: 20px;
             width: 4px;
-            background: #ddd;
+            background: #e0e0e0;
             border-radius: 2px;
         }
 
         .timeline-item {
             position: relative;
-            margin-bottom: 40px;
+            margin-bottom: 30px;
             padding-left: 60px;
-            animation: fadeIn 0.5s ease forwards;
-            transition: all 0.5s ease;
+            transition: all 0.6s ease; /* Transition นุ่มนวล */
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
+        /* จุด Marker */
         .timeline-marker {
             position: absolute;
             left: 11px;
@@ -101,78 +95,104 @@
             border: 4px solid var(--primary-orange);
             border-radius: 50%;
             z-index: 2;
-            transition: all 0.5s ease;
+            transition: all 0.6s ease;
         }
 
+        /* กล่องข้อความ */
         .timeline-content {
             background: var(--white);
             border-radius: 12px;
             padding: 20px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.05);
             border-left: 5px solid var(--primary-orange);
-            transition: all 0.5s ease;
-        }
-
-        .timeline-content:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            transition: all 0.6s ease;
         }
 
         .time-badge {
             background: var(--light-orange);
             color: var(--primary-orange);
-            padding: 5px 12px;
+            padding: 4px 12px;
             border-radius: 20px;
             font-weight: 600;
-            font-size: 0.9em;
+            font-size: 0.85em;
             display: inline-block;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
 
-        h3 { margin: 0 0 10px 0; color: #E65100; }
-        p { margin: 0; line-height: 1.6; color: #555; }
+        h3 { margin: 0 0 8px 0; color: #E65100; font-size: 1.25em; }
+        p { margin: 0; line-height: 1.6; color: #555; font-size: 0.95em; }
 
         .activity-img {
             width: 100%;
-            height: auto;
-            max-height: 300px;
+            height: 200px;
             object-fit: cover;
             border-radius: 8px;
-            margin-top: 15px;
+            margin-top: 12px;
             display: block;
+            background-color: #eee;
         }
 
-        #loading { text-align: center; padding: 50px; color: #888; font-size: 1.1em; }
-        .error-message { color: red; text-align: center; padding: 20px; background: #fff0f0; border-radius: 8px; }
+        /* --- STYLES สำหรับสถานะ (หัวใจหลัก) --- */
 
-        /* --- Styles สถานะ --- */
-        /* อดีต */
-        .timeline-item.past { opacity: 0.5; }
-        .timeline-item.past .timeline-content { filter: grayscale(100%); box-shadow: none; }
-        .timeline-item.past .timeline-marker { border-color: #ccc; background: #eee; }
+        /* 1. อดีต (Past) -> ซีดจางลง */
+        .timeline-item.past {
+            opacity: 0.3; /* จางลงเหลือ 30% */
+            filter: grayscale(100%); /* ขาวดำ */
+            transform: scale(0.98); /* หดเล็กลงนิดนึง */
+        }
+        .timeline-item.past .timeline-marker {
+            background: #ccc;
+            border-color: #bbb;
+        }
+        .timeline-item.past .timeline-content {
+            box-shadow: none; /* เอาเงาออก */
+            border-left-color: #ccc;
+            background: #f9f9f9;
+        }
 
-        /* ปัจจุบัน */
-        .timeline-item.active { z-index: 10; }
+        /* 2. ปัจจุบัน (Active) -> เด่นสุด */
+        .timeline-item.active {
+            z-index: 10;
+            opacity: 1;
+        }
         .timeline-item.active .timeline-content {
-            transform: scale(1.05);
-            box-shadow: 0 0 25px var(--active-glow);
+            transform: scale(1.05) translateX(5px); /* ขยายใหญ่และดันออกมา */
+            box-shadow: 0 10px 30px var(--active-glow); /* เงาฟุ้งๆ */
             border-left: 8px solid #FF4500;
             background-color: #fff;
         }
         .timeline-item.active .timeline-marker {
             background: #FF4500;
-            box-shadow: 0 0 15px #FF4500;
+            box-shadow: 0 0 0 4px rgba(255, 69, 0, 0.2); /* วงแหวนรอบจุด */
             transform: scale(1.3);
             border-color: #fff;
         }
-        .timeline-item.active .time-badge { background: #FF4500; color: white; }
+        .timeline-item.active h3 {
+            color: #FF4500;
+            font-weight: 700;
+        }
+
+        /* 3. อนาคต (Future) -> ปกติ */
+        .timeline-item {
+            opacity: 1;
+        }
+
+        #loading { text-align: center; padding: 50px; color: #888; }
+        .error-message { color: #d32f2f; background: #ffebee; padding: 10px; border-radius: 5px; text-align: center; }
 
         @media (min-width: 768px) {
             .timeline::before { left: 50%; margin-left: -2px; }
             .timeline-item { width: 50%; padding-left: 0; padding-right: 40px; left: 0; }
             .timeline-item:nth-child(even) { left: 50%; padding-left: 40px; padding-right: 0; }
             .timeline-item:nth-child(even) .timeline-content { border-left: none; border-right: 5px solid var(--primary-orange); }
-            .timeline-item.active:nth-child(even) .timeline-content { border-right: 8px solid #FF4500; }
+            
+            /* ปรับ Active สำหรับ Desktop */
+            .timeline-item.active:nth-child(odd) .timeline-content { transform: scale(1.05) translateX(-5px); }
+            .timeline-item.active:nth-child(even) .timeline-content { 
+                border-right: 8px solid #FF4500; 
+                transform: scale(1.05) translateX(5px);
+            }
+
             .timeline-marker { left: 50%; margin-left: -11px; }
         }
     </style>
@@ -180,8 +200,7 @@
 <body>
 
 <header>
-    <h1><i class="fas fa-plane-departure"></i> Travel Schedule 📝</h1>
-    <p>Timetable ✈️</p>
+    <h1><i class="fas fa-map-marked-alt"></i> Trip Planner</h1>
     <div id="live-clock">Loading...</div>
 </header>
 
@@ -193,7 +212,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
 
 <script>
-    // URL ของ Google Sheet (CSV) ที่คุณให้มา
+    // URL CSV ของคุณ
     const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnYu4EMm4xlYqKA0PuPDVRU6-X7H7aCkXm70gokacZ-vPPa-J9-QXzQb5O-m7sGTdHZbE_9cE_sd5/pub?gid=0&single=true&output=csv'; 
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -203,13 +222,13 @@
 
     function startClock() {
         updateClock();
-        setInterval(updateClock, 1000);
+        setInterval(updateClock, 1000); // อัปเดตทุก 1 วินาที
     }
 
     function updateClock() {
         const now = new Date();
-        const timeString = now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        const dateString = now.toLocaleDateString('th-TH', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+        const timeString = now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+        const dateString = now.toLocaleDateString('th-TH', { weekday: 'short', day: 'numeric', month: 'short' });
         
         const clockEl = document.getElementById('live-clock');
         if(clockEl) clockEl.innerHTML = `${dateString} ${timeString}`;
@@ -222,57 +241,46 @@
             download: true,
             header: true,
             skipEmptyLines: true,
-            transformHeader: function(h) {
-                return h.trim(); // ลบช่องว่างหัวตารางกันพลาด เช่น "Time " -> "Time"
-            },
+            transformHeader: h => h.trim(),
             complete: function(results) {
                 if (results.data && results.data.length > 0) {
                     renderTimeline(results.data);
                 } else {
-                    showError("โหลดข้อมูลสำเร็จ แต่ไม่พบรายการในตาราง (ตรวจสอบว่ามีข้อมูลหรือไม่)");
+                    document.getElementById('loading').innerHTML = "ไม่พบข้อมูลในตาราง";
                 }
             },
             error: function(err) {
-                showError("โหลดข้อมูลไม่สำเร็จ: " + err.message + " (ตรวจสอบว่า Publish to web หรือยัง)");
+                document.getElementById('loading').innerHTML = `<div class="error-message">โหลดข้อมูลไม่สำเร็จ (เช็คเน็ต หรือ Link CSV)</div>`;
             }
         });
     }
 
     function renderTimeline(data) {
         const container = document.getElementById('timeline-container');
-        const loading = document.getElementById('loading');
-        loading.style.display = 'none';
+        document.getElementById('loading').style.display = 'none';
         
-        // กรองแถวว่าง และแปลงวันที่
-        const cleanData = data.filter(item => item.Activity && item.Activity.trim() !== "").map(item => {
-            // สร้าง object วันที่ที่ถูกต้อง
-            const dateObj = parseCustomDate(item.Date, item.Time);
-            return { ...item, _dateObj: dateObj };
+        // แปลงข้อมูลและเรียงลำดับเวลา
+        const cleanData = data.filter(item => item.Activity).map(item => {
+            return { ...item, _dateObj: parseCustomDate(item.Date, item.Time) };
         });
 
-        // เรียงลำดับตามเวลา
         cleanData.sort((a, b) => a._dateObj - b._dateObj);
-
-        if (cleanData.length === 0) {
-            showError("ไม่พบข้อมูล Activity (ตรวจสอบชื่อหัวตาราง: Date, Time, Activity)");
-            return;
-        }
 
         cleanData.forEach(item => {
             const li = document.createElement('li');
             li.className = 'timeline-item';
             
-            // เก็บเวลาใน Attribute สำหรับเช็ค Active/Past
+            // ใส่เวลาไว้ใน Attribute เพื่อเช็ค Active/Past
             if (item._dateObj) {
                 li.setAttribute('data-dt', item._dateObj.toISOString());
             }
 
-            const imgHTML = item.Image ? `<img src="${item.Image}" class="activity-img" alt="${item.Activity}" loading="lazy">` : '';
+            const imgHTML = item.Image ? `<img src="${item.Image}" class="activity-img" alt="Activity Image" loading="lazy">` : '';
 
             li.innerHTML = `
                 <div class="timeline-marker"></div>
                 <div class="timeline-content">
-                    <div class="time-badge"><i class="far fa-clock"></i> ${item.Date} | ${item.Time} น.</div>
+                    <div class="time-badge"><i class="far fa-clock"></i> ${item.Date} | ${item.Time}</div>
                     <h3>${item.Activity}</h3>
                     <p>${item.Description || ''}</p>
                     ${imgHTML}
@@ -281,71 +289,59 @@
             container.appendChild(li);
         });
 
-        // อัพเดทสถานะทันทีหลังสร้างเสร็จ
         updateTimelineStatus(new Date());
     }
 
-    // ฟังก์ชันแปลงวันที่ แบบรองรับ DD/MM/YYYY และ ปีพ.ศ.
-    function parseCustomDate(dateStr, timeStr) {
-        if (!dateStr || !timeStr) return new Date(8640000000000000); // ถ้าไม่มีค่า ส่งไปไกลสุดกู่
-
-        // ลองแปลงแบบมาตรฐานก่อน (YYYY-MM-DD)
-        let d = new Date(`${dateStr}T${timeStr}`);
-        if (!isNaN(d.getTime())) return d;
-
-        // ถ้าไม่ได้ ลองแปลงแบบ DD/MM/YYYY
-        // รองรับตัวคั่น / หรือ -
-        const parts = dateStr.split(/[\/\-]/); 
-        if (parts.length === 3) {
-            let day = parseInt(parts[0], 10);
-            let month = parseInt(parts[1], 10) - 1; // เดือนเริ่มที่ 0
-            let year = parseInt(parts[2], 10);
-
-            // แก้ปี พ.ศ. (ถ้ามากกว่า 2400 ให้ลบ 543)
-            if (year > 2400) year -= 543;
-            // แก้ปี ค.ศ. 2 หลัก (เช่น 26 -> 2026)
-            if (year < 100) year += 2000;
-
-            // รวมเวลา
-            const timeParts = timeStr.split(':');
-            let hour = parseInt(timeParts[0], 10);
-            let minute = parseInt(timeParts[1], 10);
-
-            return new Date(year, month, day, hour, minute);
-        }
-        
-        return new Date(); // ถ้าแปลงไม่ได้เลย ให้เป็นเวลาปัจจุบัน (กัน Error)
-    }
-
+    // ฟังก์ชันเช็คสถานะ Past / Active / Future
     function updateTimelineStatus(now) {
         const items = document.querySelectorAll('.timeline-item');
         let activeIndex = -1;
 
+        // 1. หาว่ากิจกรรมไหนคือ "กิจกรรมล่าสุดที่เริ่มไปแล้ว"
         items.forEach((item, index) => {
             const dtStr = item.getAttribute('data-dt');
             if(!dtStr) return;
             const itemTime = new Date(dtStr);
             
-            // ถ้าเวลาปัจจุบัน >= เวลากิจกรรม แสดงว่ากิจกรรมนั้นเริ่มแล้ว
             if (now >= itemTime) {
                 activeIndex = index;
             }
         });
 
+        // 2. แจก Class ตามตำแหน่ง
         items.forEach((item, index) => {
-            item.classList.remove('past', 'active');
+            item.classList.remove('past', 'active'); // ล้างค่าเก่าก่อน
+
             if (index < activeIndex) {
+                // รายการที่ผ่านมาแล้ว -> เป็นอดีต
                 item.classList.add('past');
-            } else if (index === activeIndex) {
+            } 
+            else if (index === activeIndex) {
+                // รายการล่าสุดที่เวลาถึงแล้ว -> เป็นปัจจุบัน
                 item.classList.add('active');
             }
+            // รายการ index > activeIndex คืออนาคต (ปล่อยปกติ)
         });
     }
 
-    function showError(msg) {
-        const loading = document.getElementById('loading');
-        loading.innerHTML = `<div class="error-message"><i class="fas fa-exclamation-circle"></i> ${msg}</div>`;
-        loading.style.display = 'block';
+    // ฟังก์ชันแปลงวันที่ (รองรับทั้ง / และ - และ ปี พ.ศ.)
+    function parseCustomDate(dateStr, timeStr) {
+        if (!dateStr || !timeStr) return new Date(8640000000000000); // กัน error
+        
+        try {
+            const parts = dateStr.split(/[\/\-]/); // แยกด้วย / หรือ -
+            if (parts.length === 3) {
+                let d = parseInt(parts[0]);
+                let m = parseInt(parts[1]) - 1;
+                let y = parseInt(parts[2]);
+                if (y > 2400) y -= 543; // แปลง พ.ศ. -> ค.ศ.
+                if (y < 100) y += 2000; // แปลงปี 2 หลัก
+                
+                const t = timeStr.split(':');
+                return new Date(y, m, d, parseInt(t[0]), parseInt(t[1]));
+            }
+        } catch (e) { console.error(e); }
+        return new Date();
     }
 </script>
 
