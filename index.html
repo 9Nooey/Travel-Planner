@@ -43,14 +43,16 @@
         
         /* นาฬิกา Real-time */
         #live-clock {
-            font-size: 1.3em;
+            font-size: 1.2em;
+            font-family: 'Courier New', Courier, monospace; /* ใช้ฟอนต์แบบ Monospace ให้ตัวเลขเท่ากัน */
             font-weight: 600;
-            background: rgba(255, 255, 255, 0.25);
-            padding: 5px 20px;
+            background: rgba(0, 0, 0, 0.2); /* พื้นหลังเข้มขึ้นนิดหน่อยเพื่อให้ตัวเลขชัด */
+            padding: 8px 20px;
             border-radius: 30px;
             display: inline-block;
-            margin-top: 10px;
+            margin-top: 15px;
             backdrop-filter: blur(5px);
+            letter-spacing: 1px; /* เพิ่มระยะห่างตัวเลข */
         }
 
         .container {
@@ -65,7 +67,6 @@
             list-style: none;
         }
 
-        /* เส้นแกนกลาง */
         .timeline::before {
             content: '';
             position: absolute;
@@ -81,10 +82,9 @@
             position: relative;
             margin-bottom: 30px;
             padding-left: 60px;
-            transition: all 0.6s ease; /* Transition นุ่มนวล */
+            transition: all 0.6s ease;
         }
 
-        /* จุด Marker */
         .timeline-marker {
             position: absolute;
             left: 11px;
@@ -98,7 +98,6 @@
             transition: all 0.6s ease;
         }
 
-        /* กล่องข้อความ */
         .timeline-content {
             background: var(--white);
             border-radius: 12px;
@@ -132,38 +131,38 @@
             background-color: #eee;
         }
 
-        /* --- STYLES สำหรับสถานะ (หัวใจหลัก) --- */
-
-        /* 1. อดีต (Past) -> ซีดจางลง */
+        /* --- STYLES สถานะ --- */
+        
+        /* 1. อดีต (Past) */
         .timeline-item.past {
-            opacity: 0.3; /* จางลงเหลือ 30% */
-            filter: grayscale(100%); /* ขาวดำ */
-            transform: scale(0.98); /* หดเล็กลงนิดนึง */
+            opacity: 0.3; 
+            filter: grayscale(100%);
+            transform: scale(0.98);
         }
         .timeline-item.past .timeline-marker {
             background: #ccc;
             border-color: #bbb;
         }
         .timeline-item.past .timeline-content {
-            box-shadow: none; /* เอาเงาออก */
+            box-shadow: none;
             border-left-color: #ccc;
             background: #f9f9f9;
         }
 
-        /* 2. ปัจจุบัน (Active) -> เด่นสุด */
+        /* 2. ปัจจุบัน (Active) */
         .timeline-item.active {
             z-index: 10;
             opacity: 1;
         }
         .timeline-item.active .timeline-content {
-            transform: scale(1.05) translateX(5px); /* ขยายใหญ่และดันออกมา */
-            box-shadow: 0 10px 30px var(--active-glow); /* เงาฟุ้งๆ */
+            transform: scale(1.05) translateX(5px);
+            box-shadow: 0 10px 30px var(--active-glow);
             border-left: 8px solid #FF4500;
             background-color: #fff;
         }
         .timeline-item.active .timeline-marker {
             background: #FF4500;
-            box-shadow: 0 0 0 4px rgba(255, 69, 0, 0.2); /* วงแหวนรอบจุด */
+            box-shadow: 0 0 0 4px rgba(255, 69, 0, 0.2);
             transform: scale(1.3);
             border-color: #fff;
         }
@@ -172,21 +171,13 @@
             font-weight: 700;
         }
 
-        /* 3. อนาคต (Future) -> ปกติ */
-        .timeline-item {
-            opacity: 1;
-        }
-
-        #loading { text-align: center; padding: 50px; color: #888; }
-        .error-message { color: #d32f2f; background: #ffebee; padding: 10px; border-radius: 5px; text-align: center; }
-
+        /* Responsive */
         @media (min-width: 768px) {
             .timeline::before { left: 50%; margin-left: -2px; }
             .timeline-item { width: 50%; padding-left: 0; padding-right: 40px; left: 0; }
             .timeline-item:nth-child(even) { left: 50%; padding-left: 40px; padding-right: 0; }
             .timeline-item:nth-child(even) .timeline-content { border-left: none; border-right: 5px solid var(--primary-orange); }
             
-            /* ปรับ Active สำหรับ Desktop */
             .timeline-item.active:nth-child(odd) .timeline-content { transform: scale(1.05) translateX(-5px); }
             .timeline-item.active:nth-child(even) .timeline-content { 
                 border-right: 8px solid #FF4500; 
@@ -227,11 +218,20 @@
 
     function updateClock() {
         const now = new Date();
-        const timeString = now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
-        const dateString = now.toLocaleDateString('th-TH', { weekday: 'short', day: 'numeric', month: 'short' });
+        
+        // จัดรูปแบบ DD/MM/YYYY HH:MM:SS
+        const day = String(now.getDate()).padStart(2, '0');
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const year = now.getFullYear(); // ใช้ปี ค.ศ. (2026)
+        
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const seconds = String(now.getSeconds()).padStart(2, '0');
+
+        const timeString = `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
         
         const clockEl = document.getElementById('live-clock');
-        if(clockEl) clockEl.innerHTML = `${dateString} ${timeString}`;
+        if(clockEl) clockEl.innerHTML = timeString;
 
         updateTimelineStatus(now);
     }
@@ -259,7 +259,6 @@
         const container = document.getElementById('timeline-container');
         document.getElementById('loading').style.display = 'none';
         
-        // แปลงข้อมูลและเรียงลำดับเวลา
         const cleanData = data.filter(item => item.Activity).map(item => {
             return { ...item, _dateObj: parseCustomDate(item.Date, item.Time) };
         });
@@ -270,7 +269,6 @@
             const li = document.createElement('li');
             li.className = 'timeline-item';
             
-            // ใส่เวลาไว้ใน Attribute เพื่อเช็ค Active/Past
             if (item._dateObj) {
                 li.setAttribute('data-dt', item._dateObj.toISOString());
             }
@@ -292,12 +290,10 @@
         updateTimelineStatus(new Date());
     }
 
-    // ฟังก์ชันเช็คสถานะ Past / Active / Future
     function updateTimelineStatus(now) {
         const items = document.querySelectorAll('.timeline-item');
         let activeIndex = -1;
 
-        // 1. หาว่ากิจกรรมไหนคือ "กิจกรรมล่าสุดที่เริ่มไปแล้ว"
         items.forEach((item, index) => {
             const dtStr = item.getAttribute('data-dt');
             if(!dtStr) return;
@@ -308,34 +304,28 @@
             }
         });
 
-        // 2. แจก Class ตามตำแหน่ง
         items.forEach((item, index) => {
-            item.classList.remove('past', 'active'); // ล้างค่าเก่าก่อน
+            item.classList.remove('past', 'active'); 
 
             if (index < activeIndex) {
-                // รายการที่ผ่านมาแล้ว -> เป็นอดีต
                 item.classList.add('past');
             } 
             else if (index === activeIndex) {
-                // รายการล่าสุดที่เวลาถึงแล้ว -> เป็นปัจจุบัน
                 item.classList.add('active');
             }
-            // รายการ index > activeIndex คืออนาคต (ปล่อยปกติ)
         });
     }
 
-    // ฟังก์ชันแปลงวันที่ (รองรับทั้ง / และ - และ ปี พ.ศ.)
     function parseCustomDate(dateStr, timeStr) {
-        if (!dateStr || !timeStr) return new Date(8640000000000000); // กัน error
-        
+        if (!dateStr || !timeStr) return new Date(8640000000000000);
         try {
-            const parts = dateStr.split(/[\/\-]/); // แยกด้วย / หรือ -
+            const parts = dateStr.split(/[\/\-]/); 
             if (parts.length === 3) {
                 let d = parseInt(parts[0]);
                 let m = parseInt(parts[1]) - 1;
                 let y = parseInt(parts[2]);
-                if (y > 2400) y -= 543; // แปลง พ.ศ. -> ค.ศ.
-                if (y < 100) y += 2000; // แปลงปี 2 หลัก
+                if (y > 2400) y -= 543; 
+                if (y < 100) y += 2000; 
                 
                 const t = timeStr.split(':');
                 return new Date(y, m, d, parseInt(t[0]), parseInt(t[1]));
