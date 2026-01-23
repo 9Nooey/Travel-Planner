@@ -16,6 +16,7 @@
             --light-orange: #FFF3E0;
             --dark-text: #333;
             --white: #ffffff;
+            --active-glow: rgba(255, 140, 0, 0.6);
         }
 
         body {
@@ -24,20 +25,34 @@
             color: var(--dark-text);
             margin: 0;
             padding: 0;
-            /* เพิ่มเพื่อให้เลื่อนลื่นขึ้น */
             scroll-behavior: smooth; 
         }
 
         header {
             background: linear-gradient(135deg, #FF6F00, #FF8C00);
             color: var(--white);
-            padding: 40px 20px;
+            padding: 30px 20px;
             text-align: center;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            position: sticky; /* ทำให้ Header ติดด้านบนตลอดเวลา */
+            top: 0;
+            z-index: 1000;
         }
 
-        header h1 { margin: 0; font-size: 2.5em; }
-        header p { margin-top: 10px; font-size: 1.1em; opacity: 0.9; }
+        header h1 { margin: 0; font-size: 2.2em; }
+        header p { margin-top: 5px; font-size: 1em; opacity: 0.9; }
+
+        /* นาฬิกา Real-time */
+        #live-clock {
+            font-size: 1.5em;
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 5px 15px;
+            border-radius: 20px;
+            display: inline-block;
+            margin-top: 10px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+        }
 
         .container {
             max-width: 800px;
@@ -67,8 +82,8 @@
             position: relative;
             margin-bottom: 40px;
             padding-left: 60px;
-            /* เพิ่ม Animation ตอนโหลด */
             animation: fadeIn 0.5s ease forwards;
+            transition: all 0.5s ease; /* Smooth transition for status change */
         }
 
         @keyframes fadeIn {
@@ -86,6 +101,7 @@
             border: 4px solid var(--primary-orange);
             border-radius: 50%;
             z-index: 2;
+            transition: all 0.5s ease;
         }
 
         .timeline-content {
@@ -94,7 +110,7 @@
             padding: 20px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.05);
             border-left: 5px solid var(--primary-orange);
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: all 0.5s ease;
         }
 
         .timeline-content:hover {
@@ -118,21 +134,63 @@
 
         .activity-img {
             width: 100%;
-            height: auto; /* เปลี่ยนเป็น auto เพื่อไม่ให้รูปเบี้ยว */
+            height: auto;
             max-height: 300px;
             object-fit: cover;
             border-radius: 8px;
             margin-top: 15px;
-            display: block; /* แก้จาก none เป็น block */
+            display: block;
         }
 
         #loading { text-align: center; padding: 50px; color: #888; }
+
+        /* --- Styles สำหรับสถานะเวลา (เพิ่มใหม่) --- */
+
+        /* 1. อดีต (Past): จางลงและเป็นขาวดำ */
+        .timeline-item.past {
+            opacity: 0.4;
+        }
+        .timeline-item.past .timeline-content {
+            filter: grayscale(100%);
+            box-shadow: none;
+        }
+        .timeline-item.past .timeline-marker {
+            border-color: #ccc;
+            background: #eee;
+        }
+
+        /* 2. ปัจจุบัน (Active): เด่นขึ้น */
+        .timeline-item.active {
+            z-index: 10;
+        }
+        .timeline-item.active .timeline-content {
+            transform: scale(1.05); /* ขยายใหญ่ */
+            box-shadow: 0 0 25px var(--active-glow); /* เรืองแสง */
+            border-left: 8px solid #FF4500; /* ขอบหนาขึ้นและสีสดขึ้น */
+            background-color: #fff;
+        }
+        .timeline-item.active .timeline-marker {
+            background: #FF4500;
+            box-shadow: 0 0 15px #FF4500;
+            transform: scale(1.3); /* จุดใหญ่ขึ้น */
+            border-color: #fff;
+        }
+        .timeline-item.active .time-badge {
+            background: #FF4500;
+            color: white;
+        }
 
         @media (min-width: 768px) {
             .timeline::before { left: 50%; margin-left: -2px; }
             .timeline-item { width: 50%; padding-left: 0; padding-right: 40px; left: 0; }
             .timeline-item:nth-child(even) { left: 50%; padding-left: 40px; padding-right: 0; }
             .timeline-item:nth-child(even) .timeline-content { border-left: none; border-right: 5px solid var(--primary-orange); }
+            
+            /* ปรับ Active สำหรับ Desktop ให้ Border ถูกฝั่ง */
+            .timeline-item.active:nth-child(even) .timeline-content {
+                border-right: 8px solid #FF4500;
+            }
+
             .timeline-marker { left: 50%; margin-left: -11px; }
         }
     </style>
@@ -142,6 +200,7 @@
 <header>
     <h1><i class="fas fa-plane-departure"></i> Travel Schedule 📝</h1>
     <p>Timetable ✈️</p>
+    <div id="live-clock">--:--:--</div>
 </header>
 
 <div class="container">
@@ -154,15 +213,31 @@
 <script>
     const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnYu4EMm4xlYqKA0PuPDVRU6-X7H7aCkXm70gokacZ-vPPa-J9-QXzQb5O-m7sGTdHZbE_9cE_sd5/pub?gid=0&single=true&output=csv'; 
 
-    // ใช้ DOMContentLoaded เพื่อให้แน่ใจว่าโหลด HTML เสร็จก่อนรัน Script
     document.addEventListener('DOMContentLoaded', () => {
+        // เริ่มต้นนาฬิกาทันที
+        updateClock();
+        setInterval(updateClock, 1000);
+
         if(SHEET_CSV_URL) {
             init();
         }
     });
 
+    // ฟังก์ชันอัปเดตนาฬิกาบน Header และเช็คสถานะ Timeline
+    function updateClock() {
+        const now = new Date();
+        // แสดงเวลา
+        const timeString = now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        const dateString = now.toLocaleDateString('th-TH', { weekday: 'short', day: 'numeric', month: 'short' });
+        
+        const clockEl = document.getElementById('live-clock');
+        if(clockEl) clockEl.innerHTML = `${dateString} ${timeString}`;
+
+        // อัปเดตสถานะ Timeline (Past/Active)
+        updateTimelineStatus(now);
+    }
+
     function init() {
-        // เช็คว่า Papa loaded หรือยัง (เพราะใช้ defer)
         const checkPapa = setInterval(() => {
             if (typeof Papa !== 'undefined') {
                 clearInterval(checkPapa);
@@ -185,7 +260,6 @@
         const loading = document.getElementById('loading');
         loading.style.display = 'none';
         
-        // กรองแถวที่ไม่มีกิจกรรมออกก่อนเรียงลำดับ
         const cleanData = data.filter(item => item.Activity && item.Activity.trim() !== "");
 
         cleanData.sort((a, b) => {
@@ -195,8 +269,11 @@
         cleanData.forEach(item => {
             const li = document.createElement('li');
             li.className = 'timeline-item';
+            
+            // เก็บข้อมูลเวลาไว้ใน Attribute เพื่อใช้เปรียบเทียบภายหลัง
+            const itemDateTime = new Date(item.Date + ' ' + item.Time);
+            li.setAttribute('data-dt', itemDateTime.toISOString());
 
-            // 3. เพิ่ม loading="lazy" ในรูปภาพเพื่อความไว
             const imgHTML = item.Image ? `<img src="${item.Image}" class="activity-img" alt="${item.Activity}" loading="lazy">` : '';
 
             li.innerHTML = `
@@ -209,6 +286,45 @@
                 </div>
             `;
             container.appendChild(li);
+        });
+
+        // เรียก update status ครั้งแรกทันทีหลัง render เสร็จ
+        updateTimelineStatus(new Date());
+    }
+
+    // ฟังก์ชันคำนวณว่าอันไหนเป็น Past หรือ Active
+    function updateTimelineStatus(now) {
+        const items = document.querySelectorAll('.timeline-item');
+        let activeIndex = -1;
+
+        // หาว่ากิจกรรมไหนคือกิจกรรมล่าสุดที่เวลาเริ่มไปแล้ว (หรือกำลังทำอยู่)
+        items.forEach((item, index) => {
+            const dtStr = item.getAttribute('data-dt');
+            if(!dtStr) return;
+            
+            const itemTime = new Date(dtStr);
+            
+            // ถ้าเวลาปัจจุบัน มากกว่าหรือเท่ากับ เวลากิจกรรม -> ถือว่าเริ่มไปแล้ว
+            if (now >= itemTime) {
+                activeIndex = index;
+            }
+        });
+
+        // วนลูปเพื่อใส่ Class
+        items.forEach((item, index) => {
+            item.classList.remove('past', 'active');
+
+            if (index < activeIndex) {
+                // กิจกรรมก่อนหน้า "ปัจจุบัน" -> เป็นอดีต (Past)
+                item.classList.add('past');
+            } else if (index === activeIndex) {
+                // กิจกรรมล่าสุดที่เวลาผ่านไปแล้ว -> กำลังทำอยู่ (Active)
+                item.classList.add('active');
+                
+                // (Option) ถ้าต้องการให้ Scroll ไปหาอันที่ Active อัตโนมัติในครั้งแรก
+                // item.scrollIntoView({behavior: "smooth", block: "center"}); 
+            }
+            // index > activeIndex คืออนาคต (ปล่อยปกติ)
         });
     }
 </script>
