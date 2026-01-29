@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <style>
-        /* CSS เดิม */
+        /* --- CSS SETUP --- */
         :root {
             --primary-orange: #FF8C00;
             --light-orange: #FFF3E0;
@@ -60,6 +60,7 @@
             margin: 30px auto;
             padding: 0 20px;
             padding-bottom: 80px;
+            min-height: 300px;
         }
 
         .timeline {
@@ -132,7 +133,7 @@
             background-color: #eee;
         }
 
-        /* Styles สถานะ */
+        /* Status Styles */
         .timeline-item.past { opacity: 0.3; filter: grayscale(100%); transform: scale(0.98); }
         .timeline-item.past .timeline-marker { background: #ccc; border-color: #bbb; }
         .timeline-item.past .timeline-content { box-shadow: none; border-left-color: #ccc; background: #f9f9f9; }
@@ -186,3 +187,240 @@
             backdrop-filter: blur(3px);
         }
         .modal-content {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            animation: slideUp 0.3s ease;
+        }
+        @keyframes slideUp { from {transform: translateY(20px); opacity:0;} to {transform: translateY(0); opacity:1;} }
+        
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 600; color: #555; }
+        .form-group input, .form-group textarea {
+            width: 100%; padding: 10px;
+            border: 1px solid #ddd; border-radius: 8px;
+            box-sizing: border-box; font-family: 'Kanit', sans-serif;
+        }
+        .btn-submit {
+            width: 100%; background: #FF4500; color: white;
+            padding: 12px; border: none; border-radius: 8px;
+            font-size: 1rem; cursor: pointer; font-weight: 600;
+        }
+        .close-modal { float: right; cursor: pointer; font-size: 1.5rem; color: #888; }
+        
+        /* Debug Box */
+        .debug-box {
+            background: #fff3cd; color: #856404;
+            padding: 15px; border: 1px solid #ffeeba;
+            border-radius: 5px; margin: 20px; font-size: 0.9em;
+            word-wrap: break-word;
+        }
+
+        @media (min-width: 768px) {
+            .timeline::before { left: 50%; margin-left: -2px; }
+            .timeline-item { width: 50%; padding-left: 0; padding-right: 40px; left: 0; }
+            .timeline-item:nth-child(even) { left: 50%; padding-left: 40px; padding-right: 0; }
+            .timeline-item:nth-child(even) .timeline-content { border-left: none; border-right: 5px solid var(--primary-orange); }
+            .timeline-item.active:nth-child(odd) .timeline-content { transform: scale(1.05) translateX(-5px); }
+            .timeline-item.active:nth-child(even) .timeline-content { border-right: 8px solid #FF4500; transform: scale(1.05) translateX(5px); }
+            .timeline-marker { left: 50%; margin-left: -11px; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1><i class="fas fa-map-marked-alt"></i> Trip Planner</h1>
+    <div id="live-clock">Loading...</div>
+</header>
+
+<div class="container">
+    <div id="loading">
+        <i class="fas fa-spinner fa-spin"></i> กำลังโหลดข้อมูล...
+    </div>
+    <ul class="timeline" id="timeline-container"></ul>
+    <div id="debug-area"></div>
+</div>
+
+<button class="fab-btn" onclick="openModal()"><i class="fas fa-plus"></i></button>
+
+<div class="modal-overlay" id="addModal">
+    <div class="modal-content">
+        <span class="close-modal" onclick="closeModal()">&times;</span>
+        <h2 style="margin-top:0; color:#FF4500;">เพิ่มกิจกรรมใหม่</h2>
+        <form id="tripForm" onsubmit="submitForm(event)">
+            <div class="form-group"><label>วันที่</label><input type="text" name="date" id="inputDate" required></div>
+            <div class="form-group"><label>เวลา</label><input type="time" name="time" required></div>
+            <div class="form-group"><label>กิจกรรม</label><input type="text" name="activity" required></div>
+            <div class="form-group"><label>รายละเอียด</label><textarea name="desc" rows="2"></textarea></div>
+            <div class="form-group"><label>รูปภาพ (Link)</label><input type="url" name="image"></div>
+            <button type="submit" class="btn-submit" id="submitBtn">บันทึกข้อมูล</button>
+        </form>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnYu4EMm4xlYqKA0PuPDVRU6-X7H7aCkXm70gokacZ-vPPa-J9-QXzQb5O-m7sGTdHZbE_9cE_sd5/pub?gid=0&single=true&output=csv'; 
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx8jPcSpiU5TCrZ8Nhq7lJDEYc66-EQ2ClhEJziQLJuHTPP0zGr0rPoQqd85YwySH-R8w/exec'; 
+
+    document.addEventListener('DOMContentLoaded', () => {
+        startClock();
+        loadSheetData();
+        const t = new Date();
+        document.getElementById('inputDate').value = `${String(t.getDate()).padStart(2,'0')}/${String(t.getMonth()+1).padStart(2,'0')}/${t.getFullYear()}`;
+    });
+
+    function startClock() {
+        setInterval(() => {
+            const now = new Date();
+            const timeStr = `${String(now.getDate()).padStart(2,'0')}/${String(now.getMonth()+1).padStart(2,'0')}/${now.getFullYear()} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+            const clock = document.getElementById('live-clock');
+            if(clock) clock.innerText = timeStr;
+            updateTimelineStatus(now);
+        }, 1000);
+    }
+
+    function loadSheetData() {
+        // เพิ่ม &t=... เพื่อบังคับโหลดใหม่เสมอ
+        Papa.parse(SHEET_CSV_URL + '&t=' + Date.now(), {
+            download: true,
+            header: true,
+            skipEmptyLines: true,
+            complete: function(results) {
+                if (results.data && results.data.length > 0) {
+                    processAndRender(results.data);
+                } else {
+                    showDebug("ไม่พบข้อมูลในไฟล์ CSV (ตารางว่างเปล่า?)");
+                }
+            },
+            error: function(err) {
+                showDebug("เชื่อมต่อ CSV ไม่ได้: " + err.message);
+            }
+        });
+    }
+
+    // ฟังก์ชันฉลาด: แปลงหัวตารางไทย/อังกฤษ ให้เป็นมาตรฐานเดียวกัน
+    function processAndRender(data) {
+        const container = document.getElementById('timeline-container');
+        const loading = document.getElementById('loading');
+        
+        // 1. ลองดูหัวตารางแถวแรกเพื่อเช็คว่าอ่านได้ไหม
+        const firstRow = data[0];
+        console.log("หัวตารางที่พบ:", Object.keys(firstRow));
+
+        const cleanData = data.map(item => {
+            // Mapping ภาษาไทย -> อังกฤษ
+            return {
+                Date: item['Date'] || item['date'] || item['วันที่'] || '',
+                Time: item['Time'] || item['time'] || item['เวลา'] || '',
+                Activity: item['Activity'] || item['activity'] || item['กิจกรรม'] || item['รายการ'] || '',
+                Description: item['Description'] || item['description'] || item['รายละเอียด'] || '',
+                Image: item['Image'] || item['image'] || item['รูป'] || item['รูปภาพ'] || ''
+            };
+        }).filter(item => item.Activity && item.Activity.trim() !== "");
+
+        if (cleanData.length === 0) {
+            showDebug(`อ่านข้อมูลไม่ได้! หัวตารางที่คุณใช้คือ: [${Object.keys(firstRow).join(', ')}] <br> กรุณาเปลี่ยนชื่อหัวตารางใน Google Sheet ให้เป็น: <b>วันที่, เวลา, กิจกรรม</b>`);
+            loading.style.display = 'none';
+            return;
+        }
+
+        // 2. แปลงวันที่และเรียงลำดับ
+        cleanData.forEach(item => {
+            item._dateObj = parseCustomDate(item.Date, item.Time);
+        });
+        cleanData.sort((a, b) => a._dateObj - b._dateObj);
+
+        // 3. แสดงผล
+        loading.style.display = 'none';
+        container.innerHTML = '';
+
+        cleanData.forEach(item => {
+            const li = document.createElement('li');
+            li.className = 'timeline-item';
+            if (item._dateObj) li.setAttribute('data-dt', item._dateObj.toISOString());
+            
+            const imgHTML = item.Image ? `<img src="${item.Image}" class="activity-img" loading="lazy">` : '';
+
+            li.innerHTML = `
+                <div class="timeline-marker"></div>
+                <div class="timeline-content">
+                    <div class="time-badge"><i class="far fa-clock"></i> ${item.Date} | ${item.Time}</div>
+                    <h3>${item.Activity}</h3>
+                    <p>${item.Description}</p>
+                    ${imgHTML}
+                </div>
+            `;
+            container.appendChild(li);
+        });
+
+        updateTimelineStatus(new Date());
+    }
+
+    function showDebug(msg) {
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('debug-area').innerHTML = `<div class="debug-box">⚠️ <b>แจ้งเตือน:</b> ${msg}</div>`;
+    }
+
+    function updateTimelineStatus(now) {
+        const items = document.querySelectorAll('.timeline-item');
+        let activeIndex = -1;
+        items.forEach((item, index) => {
+            const dtStr = item.getAttribute('data-dt');
+            if(!dtStr) return;
+            if (now >= new Date(dtStr)) activeIndex = index;
+        });
+        items.forEach((item, index) => {
+            item.classList.remove('past', 'active');
+            if (index < activeIndex) item.classList.add('past');
+            else if (index === activeIndex) item.classList.add('active');
+        });
+    }
+
+    function parseCustomDate(dateStr, timeStr) {
+        if (!dateStr || !timeStr) return new Date(8640000000000000);
+        try {
+            const parts = dateStr.split(/[\/\-]/);
+            if (parts.length === 3) {
+                let d = parseInt(parts[0]);
+                let m = parseInt(parts[1]) - 1;
+                let y = parseInt(parts[2]);
+                if (y > 2400) y -= 543;
+                if (y < 100) y += 2000;
+                const t = timeStr.split(':');
+                return new Date(y, m, d, parseInt(t[0]), parseInt(t[1]));
+            }
+        } catch (e) {}
+        return new Date();
+    }
+
+    // Form Handling
+    function openModal() { document.getElementById('addModal').style.display = 'flex'; }
+    function closeModal() { document.getElementById('addModal').style.display = 'none'; }
+    function submitForm(e) {
+        e.preventDefault();
+        const btn = document.getElementById('submitBtn');
+        btn.innerHTML = 'กำลังบันทึก...';
+        btn.disabled = true;
+        const formData = new FormData(document.getElementById('tripForm'));
+        fetch(SCRIPT_URL, { method: 'POST', body: formData })
+        .then(() => {
+            Swal.fire('สำเร็จ', 'บันทึกแล้ว', 'success').then(() => {
+                closeModal();
+                document.getElementById('tripForm').reset();
+                setTimeout(() => location.reload(), 1000);
+            });
+        })
+        .catch(() => Swal.fire('Error', 'บันทึกไม่สำเร็จ', 'error'))
+        .finally(() => { btn.innerHTML = 'บันทึกข้อมูล'; btn.disabled = false; });
+    }
+</script>
+
+</body>
+</html>
