@@ -261,14 +261,12 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-    // --- URLs (ใส่ให้แล้ว) ---
     const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnYu4EMm4xlYqKA0PuPDVRU6-X7H7aCkXm70gokacZ-vPPa-J9-QXzQb5O-m7sGTdHZbE_9cE_sd5/pub?gid=0&single=true&output=csv'; 
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx8jPcSpiU5TCrZ8Nhq7lJDEYc66-EQ2ClhEJziQLJuHTPP0zGr0rPoQqd85YwySH-R8w/exec'; 
 
     document.addEventListener('DOMContentLoaded', () => {
         startClock();
         loadSheetData();
-        // Auto-fill Date
         const t = new Date();
         document.getElementById('inputDate').value = `${String(t.getDate()).padStart(2,'0')}/${String(t.getMonth()+1).padStart(2,'0')}/${t.getFullYear()}`;
     });
@@ -284,7 +282,6 @@
     }
 
     function loadSheetData() {
-        // ใช้ &t=... ป้องกัน Cache
         Papa.parse(SHEET_CSV_URL + '&t=' + Date.now(), {
             download: true,
             header: true,
@@ -293,7 +290,7 @@
                 if (results.data && results.data.length > 0) {
                     processAndRender(results.data);
                 } else {
-                    showDebug("ไม่พบข้อมูลในตาราง (CSV ว่างเปล่า)");
+                    showDebug("ไม่พบข้อมูลในตาราง");
                 }
             },
             error: function(err) { showDebug("โหลดข้อมูลไม่สำเร็จ: " + err.message); }
@@ -304,7 +301,6 @@
         const container = document.getElementById('timeline-container');
         document.getElementById('loading').style.display = 'none';
 
-        // ระบบ Smart Mapping (ไทย/อังกฤษ)
         const cleanData = data.map(item => {
             return {
                 Date: item['Date'] || item['date'] || item['วันที่'] || '',
@@ -316,7 +312,7 @@
         }).filter(item => item.Activity && item.Activity.trim() !== "");
 
         if (cleanData.length === 0) {
-            showDebug("อ่านข้อมูลได้ แต่ไม่พบหัวตารางที่ถูกต้อง (ต้องมี: วันที่, เวลา, กิจกรรม)");
+            showDebug("อ่านข้อมูลไม่ได้ กรุณาเช็คชื่อหัวตาราง");
             return;
         }
 
@@ -341,7 +337,17 @@
             `;
             container.appendChild(li);
         });
+        
+        // อัปเดตสถานะและ Auto Scroll
         updateTimelineStatus(new Date());
+
+        // --- เพิ่มส่วน Auto Scroll ตรงนี้ครับ ---
+        setTimeout(() => {
+            const activeItem = document.querySelector('.timeline-item.active');
+            if (activeItem) {
+                activeItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }, 500); // รอ 0.5 วินาทีให้หน้าเว็บวาดเสร็จก่อนค่อยเลื่อน
     }
 
     function showDebug(msg) {
@@ -381,11 +387,10 @@
         return new Date();
     }
 
-    // Modal
+    // Modal & Submit
     function openModal() { document.getElementById('addModal').style.display = 'flex'; }
     function closeModal() { document.getElementById('addModal').style.display = 'none'; }
 
-    // --- Submit แบบ Fire & Forget (เร็วสุด) ---
     function submitForm(e) {
         e.preventDefault();
         const btn = document.getElementById('submitBtn');
@@ -397,13 +402,13 @@
 
         fetch(SCRIPT_URL, {
             method: 'POST',
-            mode: 'no-cors', // สำคัญมาก! ทำให้ไม่รอ Response
+            mode: 'no-cors',
             body: formData
         })
         .then(() => {
             Swal.fire({
                 title: 'ส่งข้อมูลแล้ว!',
-                text: 'ระบบกำลังบันทึก (รอสักครู่จะแสดงผล)',
+                text: 'กำลังบันทึก...',
                 icon: 'success',
                 timer: 1500,
                 showConfirmButton: false
