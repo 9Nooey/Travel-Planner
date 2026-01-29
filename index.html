@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <style>
+        /* CSS เดิม */
         :root {
             --primary-orange: #FF8C00;
             --light-orange: #FFF3E0;
@@ -58,7 +59,7 @@
             max-width: 800px;
             margin: 30px auto;
             padding: 0 20px;
-            padding-bottom: 80px; /* เผื่อที่ให้ปุ่มบวก */
+            padding-bottom: 80px;
         }
 
         .timeline {
@@ -131,7 +132,7 @@
             background-color: #eee;
         }
 
-        /* --- STYLES สถานะ --- */
+        /* Styles สถานะ */
         .timeline-item.past { opacity: 0.3; filter: grayscale(100%); transform: scale(0.98); }
         .timeline-item.past .timeline-marker { background: #ccc; border-color: #bbb; }
         .timeline-item.past .timeline-content { box-shadow: none; border-left-color: #ccc; background: #f9f9f9; }
@@ -151,7 +152,7 @@
         }
         .timeline-item.active h3 { color: #FF4500; font-weight: 700; }
 
-        /* --- ปุ่ม Floating Action Button (FAB) --- */
+        /* FAB Button */
         .fab-btn {
             position: fixed;
             bottom: 30px;
@@ -173,7 +174,7 @@
         }
         .fab-btn:hover { transform: scale(1.1); }
 
-        /* --- Modal Form --- */
+        /* Modal */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -185,197 +186,3 @@
             backdrop-filter: blur(3px);
         }
         .modal-content {
-            background: white;
-            padding: 25px;
-            border-radius: 15px;
-            width: 90%;
-            max-width: 400px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            animation: slideUp 0.3s ease;
-        }
-        @keyframes slideUp { from {transform: translateY(20px); opacity:0;} to {transform: translateY(0); opacity:1;} }
-        
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; font-weight: 600; color: #555; }
-        .form-group input, .form-group textarea {
-            width: 100%; padding: 10px;
-            border: 1px solid #ddd; border-radius: 8px;
-            box-sizing: border-box; font-family: 'Kanit', sans-serif;
-        }
-        .btn-submit {
-            width: 100%; background: #FF4500; color: white;
-            padding: 12px; border: none; border-radius: 8px;
-            font-size: 1rem; cursor: pointer; font-weight: 600;
-        }
-        .btn-submit:disabled { background: #ccc; }
-        .close-modal { float: right; cursor: pointer; font-size: 1.5rem; color: #888; }
-
-        /* Responsive */
-        @media (min-width: 768px) {
-            .timeline::before { left: 50%; margin-left: -2px; }
-            .timeline-item { width: 50%; padding-left: 0; padding-right: 40px; left: 0; }
-            .timeline-item:nth-child(even) { left: 50%; padding-left: 40px; padding-right: 0; }
-            .timeline-item:nth-child(even) .timeline-content { border-left: none; border-right: 5px solid var(--primary-orange); }
-            .timeline-item.active:nth-child(odd) .timeline-content { transform: scale(1.05) translateX(-5px); }
-            .timeline-item.active:nth-child(even) .timeline-content { border-right: 8px solid #FF4500; transform: scale(1.05) translateX(5px); }
-            .timeline-marker { left: 50%; margin-left: -11px; }
-        }
-    </style>
-</head>
-<body>
-
-<header>
-    <h1><i class="fas fa-map-marked-alt"></i> Trip Planner</h1>
-    <div id="live-clock">Loading...</div>
-</header>
-
-<div class="container">
-    <div id="loading"><i class="fas fa-spinner fa-spin"></i> กำลังโหลดข้อมูล...</div>
-    <ul class="timeline" id="timeline-container"></ul>
-</div>
-
-<button class="fab-btn" onclick="openModal()"><i class="fas fa-plus"></i></button>
-
-<div class="modal-overlay" id="addModal">
-    <div class="modal-content">
-        <span class="close-modal" onclick="closeModal()">&times;</span>
-        <h2 style="margin-top:0; color:#FF4500;">เพิ่มกิจกรรมใหม่</h2>
-        <form id="tripForm" onsubmit="submitForm(event)">
-            <div class="form-group">
-                <label>วันที่ (DD/MM/YYYY)</label>
-                <input type="text" name="date" id="inputDate" placeholder="เช่น 07/02/2026" required>
-            </div>
-            <div class="form-group">
-                <label>เวลา (HH:MM)</label>
-                <input type="time" name="time" required>
-            </div>
-            <div class="form-group">
-                <label>กิจกรรม</label>
-                <input type="text" name="activity" placeholder="เช่น กินข้าว, ขึ้นรถไฟ" required>
-            </div>
-            <div class="form-group">
-                <label>รายละเอียด</label>
-                <textarea name="desc" rows="2" placeholder="รายละเอียดเพิ่มเติม..."></textarea>
-            </div>
-            <div class="form-group">
-                <label>ลิ้งค์รูปภาพ (ถ้ามี)</label>
-                <input type="url" name="image" placeholder="https://...">
-            </div>
-            <button type="submit" class="btn-submit" id="submitBtn">บันทึกข้อมูล</button>
-        </form>
-    </div>
-</div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-<script>
-    // --- ตั้งค่า URL ---
-    // URL สำหรับอ่านข้อมูล (CSV)
-    const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnYu4EMm4xlYqKA0PuPDVRU6-X7H7aCkXm70gokacZ-vPPa-J9-QXzQb5O-m7sGTdHZbE_9cE_sd5/pub?gid=0&single=true&output=csv'; 
-    
-    // URL สำหรับบันทึกข้อมูล (Google Apps Script) -> ใส่ให้เรียบร้อยแล้วครับ
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx8jPcSpiU5TCrZ8Nhq7lJDEYc66-EQ2ClhEJziQLJuHTPP0zGr0rPoQqd85YwySH-R8w/exec'; 
-
-    document.addEventListener('DOMContentLoaded', () => {
-        startClock();
-        loadSheetData();
-        
-        // Auto-fill วันที่ปัจจุบันในฟอร์ม
-        const today = new Date();
-        const d = String(today.getDate()).padStart(2, '0');
-        const m = String(today.getMonth() + 1).padStart(2, '0');
-        const y = today.getFullYear(); 
-        document.getElementById('inputDate').value = `${d}/${m}/${y}`;
-    });
-
-    // --- ส่วนของนาฬิกาและ Timeline ---
-    function startClock() {
-        updateClock();
-        setInterval(updateClock, 1000);
-    }
-
-    function updateClock() {
-        const now = new Date();
-        const day = String(now.getDate()).padStart(2, '0');
-        const month = String(now.getMonth() + 1).padStart(2, '0');
-        const year = now.getFullYear();
-        const hours = String(now.getHours()).padStart(2, '0');
-        const minutes = String(now.getMinutes()).padStart(2, '0');
-        const seconds = String(now.getSeconds()).padStart(2, '0');
-        const timeString = `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
-        
-        const clockEl = document.getElementById('live-clock');
-        if(clockEl) clockEl.innerHTML = timeString;
-
-        updateTimelineStatus(now);
-    }
-
-    function loadSheetData() {
-        Papa.parse(SHEET_CSV_URL, {
-            download: true,
-            header: true,
-            skipEmptyLines: true,
-            transformHeader: h => h.trim(),
-            complete: function(results) {
-                if (results.data && results.data.length > 0) {
-                    renderTimeline(results.data);
-                } else {
-                    document.getElementById('loading').innerHTML = "ไม่พบข้อมูลในตาราง";
-                }
-            },
-            error: function(err) {
-                document.getElementById('loading').innerHTML = "โหลดข้อมูลไม่สำเร็จ";
-            }
-        });
-    }
-
-    function renderTimeline(data) {
-        const container = document.getElementById('timeline-container');
-        container.innerHTML = ''; 
-        document.getElementById('loading').style.display = 'none';
-        
-        const cleanData = data.filter(item => item.Activity).map(item => {
-            return { ...item, _dateObj: parseCustomDate(item.Date, item.Time) };
-        });
-
-        cleanData.sort((a, b) => a._dateObj - b._dateObj);
-
-        cleanData.forEach(item => {
-            const li = document.createElement('li');
-            li.className = 'timeline-item';
-            if (item._dateObj) li.setAttribute('data-dt', item._dateObj.toISOString());
-            const imgHTML = item.Image ? `<img src="${item.Image}" class="activity-img" alt="Activity Image" loading="lazy">` : '';
-
-            li.innerHTML = `
-                <div class="timeline-marker"></div>
-                <div class="timeline-content">
-                    <div class="time-badge"><i class="far fa-clock"></i> ${item.Date} | ${item.Time}</div>
-                    <h3>${item.Activity}</h3>
-                    <p>${item.Description || ''}</p>
-                    ${imgHTML}
-                </div>
-            `;
-            container.appendChild(li);
-        });
-        updateTimelineStatus(new Date());
-    }
-
-    function updateTimelineStatus(now) {
-        const items = document.querySelectorAll('.timeline-item');
-        let activeIndex = -1;
-        items.forEach((item, index) => {
-            const dtStr = item.getAttribute('data-dt');
-            if(!dtStr) return;
-            const itemTime = new Date(dtStr);
-            if (now >= itemTime) activeIndex = index;
-        });
-        items.forEach((item, index) => {
-            item.classList.remove('past', 'active'); 
-            if (index < activeIndex) item.classList.add('past');
-            else if (index === activeIndex) item.classList.add('active');
-        });
-    }
-
-    function parseCustomDate(dateStr, timeStr) {
-        if (!dateStr || !
