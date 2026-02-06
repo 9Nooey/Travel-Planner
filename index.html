@@ -19,7 +19,7 @@
             --dark-text: #333;
             --white: #ffffff;
             --active-glow: rgba(255, 69, 0, 0.5);
-            --bar-color: #00e676; /* สีเขียว Progress Bar */
+            --bar-color: #00e676;
         }
 
         body {
@@ -31,21 +31,24 @@
             scroll-behavior: smooth; 
         }
 
-        /* --- Animated Progress Bar (ไฮไลท์ของรอบนี้) --- */
+        /* --- Progress Bar & Car Animation (แก้ใหม่ตรงนี้) --- */
         .progress-container {
             width: 100%;
-            height: 8px;
+            height: 8px; /* ความหนาถนน */
             background: #e0e0e0;
             position: fixed;
             top: 0;
             z-index: 2000;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
 
         .progress-bar {
             height: 100%;
             width: 0%;
             background-color: var(--bar-color);
-            /* สร้างลายทางเฉียงๆ */
+            position: relative; /* เพื่อให้รถเกาะติดได้ */
+            
+            /* ลายถนนวิ่งๆ */
             background-image: linear-gradient(
                 45deg,
                 rgba(255, 255, 255, 0.3) 25%,
@@ -56,19 +59,33 @@
                 transparent 75%,
                 transparent
             );
-            background-size: 20px 20px; /* ขนาดของลาย */
-            /* สั่งให้ลายขยับ */
+            background-size: 20px 20px;
             animation: moveStripes 1s linear infinite; 
             transition: width 0.5s ease;
-            box-shadow: 0 0 10px var(--bar-color);
+            border-radius: 0 4px 4px 0;
         }
 
-        /* Animation การเคลื่อนไหวของลาย */
+        /* สร้างรูปรถที่ปลายหลอด */
+        .progress-bar::after {
+            content: '\f5e4'; /* รหัสไอคอนรถ (Car Side) ของ Font Awesome */
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            position: absolute;
+            right: -20px; /* ดันรถให้อยู่หน้าหลอด */
+            top: -10px;   /* จัดตำแหน่งแนวตั้งให้รถวางบนเส้นพอดี */
+            font-size: 24px; /* ขนาดรถ */
+            color: #FF4500;  /* สีรถ (ส้ม) */
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3); /* เงารถ */
+            z-index: 2001;
+            transform: scaleX(-1); /* กลับด้านรถให้หันหน้าไปทางขวา */
+        }
+
         @keyframes moveStripes {
             0% { background-position: 0 0; }
             100% { background-position: 20px 0; }
         }
 
+        /* --- Styles เดิม --- */
         header {
             background: linear-gradient(135deg, #FF6F00, #FF8C00);
             color: var(--white);
@@ -136,7 +153,6 @@
 
         h3 { margin: 0; color: #E65100; font-size: 1.35em; line-height: 1.4; }
 
-        /* --- STATUS STYLES --- */
         .timeline-item.past { opacity: 0.4; filter: grayscale(100%); transform: scale(0.98); }
         .timeline-item.past .timeline-marker { background: #ccc; border-color: #bbb; }
         .timeline-item.past .timeline-content { box-shadow: none; border-left-color: #ccc; background: #f9f9f9; }
@@ -156,7 +172,6 @@
             box-shadow: 0 0 0 4px rgba(255, 69, 0, 0.3); transform: scale(1.3);
         }
 
-        /* FAB & Modal */
         .fab-btn {
             position: fixed; bottom: 30px; right: 30px;
             background-color: #FF4500; color: white;
