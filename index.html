@@ -14,10 +14,11 @@
         /* --- CSS SETUP --- */
         :root {
             --primary-orange: #FF8C00;
+            --dark-orange: #FF4500; /* สีส้มเข้มสำหรับ Active */
             --light-orange: #FFF3E0;
             --dark-text: #333;
             --white: #ffffff;
-            --active-glow: rgba(255, 140, 0, 0.6);
+            --active-glow: rgba(255, 69, 0, 0.5);
         }
 
         body {
@@ -133,25 +134,52 @@
             background-color: #eee;
         }
 
-        /* --- STYLES สถานะ --- */
+        /* --- STYLES สถานะ (แก้ไขใหม่ตรงนี้) --- */
+        
+        /* 1. อดีต (Past) - จางลง ขาวดำ */
         .timeline-item.past { opacity: 0.4; filter: grayscale(100%); transform: scale(0.98); }
         .timeline-item.past .timeline-marker { background: #ccc; border-color: #bbb; }
         .timeline-item.past .timeline-content { box-shadow: none; border-left-color: #ccc; background: #f9f9f9; }
 
+        /* 2. ปัจจุบัน (Active) - สีส้ม ตัวหนังสือขาว สลับสี! */
         .timeline-item.active { z-index: 10; opacity: 1; }
+        
         .timeline-item.active .timeline-content {
+            /* เปลี่ยนพื้นหลังเป็นสีส้มไล่เฉด */
+            background: linear-gradient(135deg, var(--primary-orange), var(--dark-orange));
+            /* เปลี่ยนตัวหนังสือเป็นสีขาว */
+            color: var(--white);
             transform: scale(1.05) translateX(5px);
             box-shadow: 0 10px 30px var(--active-glow);
-            border-left: 8px solid #FF4500;
-            background-color: #fff;
+            /* เปลี่ยนขอบซ้ายเป็นสีขาวให้ตัดกัน */
+            border-left: 5px solid var(--white);
         }
+
+        /* แก้สีหัวข้อใน Active ให้เป็นขาว */
+        .timeline-item.active h3 {
+            color: var(--white) !important;
+        }
+
+        /* แก้สีรายละเอียดใน Active ให้เป็นขาวจางๆ */
+        .timeline-item.active p {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        /* สลับสีป้ายเวลาใน Active (พื้นขาว ตัวหนังสือส้ม) */
+        .timeline-item.active .time-badge {
+            background: var(--white);
+            color: var(--dark-orange);
+            font-weight: 700;
+        }
+
+        /* จุด Marker ของ Active */
         .timeline-item.active .timeline-marker {
-            background: #FF4500;
-            box-shadow: 0 0 0 4px rgba(255, 69, 0, 0.2);
+            background: var(--dark-orange);
+            border-color: var(--white); /* ขอบขาว */
+            box-shadow: 0 0 0 4px rgba(255, 69, 0, 0.3); /* วงแหวน */
             transform: scale(1.3);
-            border-color: #fff;
         }
-        .timeline-item.active h3 { color: #FF4500; font-weight: 700; }
+
 
         /* FAB Button */
         .fab-btn {
@@ -221,8 +249,18 @@
             .timeline-item { width: 50%; padding-left: 0; padding-right: 40px; left: 0; }
             .timeline-item:nth-child(even) { left: 50%; padding-left: 40px; padding-right: 0; }
             .timeline-item:nth-child(even) .timeline-content { border-left: none; border-right: 5px solid var(--primary-orange); }
-            .timeline-item.active:nth-child(odd) .timeline-content { transform: scale(1.05) translateX(-5px); }
-            .timeline-item.active:nth-child(even) .timeline-content { border-right: 8px solid #FF4500; transform: scale(1.05) translateX(5px); }
+            
+            /* Active Mode Desktop */
+            .timeline-item.active:nth-child(odd) .timeline-content { 
+                transform: scale(1.05) translateX(-5px); 
+                border-right: 5px solid white; /* Override for correct side */
+                border-left: none;
+            }
+            .timeline-item.active:nth-child(even) .timeline-content { 
+                border-right: none; 
+                border-left: 5px solid white; /* Override for correct side */
+                transform: scale(1.05) translateX(5px); 
+            }
             .timeline-marker { left: 50%; margin-left: -11px; }
         }
     </style>
@@ -338,16 +376,14 @@
             container.appendChild(li);
         });
         
-        // อัปเดตสถานะและ Auto Scroll
         updateTimelineStatus(new Date());
 
-        // --- เพิ่มส่วน Auto Scroll ตรงนี้ครับ ---
         setTimeout(() => {
             const activeItem = document.querySelector('.timeline-item.active');
             if (activeItem) {
                 activeItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
-        }, 500); // รอ 0.5 วินาทีให้หน้าเว็บวาดเสร็จก่อนค่อยเลื่อน
+        }, 500);
     }
 
     function showDebug(msg) {
@@ -387,7 +423,6 @@
         return new Date();
     }
 
-    // Modal & Submit
     function openModal() { document.getElementById('addModal').style.display = 'flex'; }
     function closeModal() { document.getElementById('addModal').style.display = 'none'; }
 
