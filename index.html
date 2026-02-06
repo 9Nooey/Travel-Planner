@@ -28,28 +28,21 @@
             color: var(--dark-text);
             margin: 0;
             padding: 0;
-            padding-top: 20px; /* เพิ่มพื้นที่ด้านบนให้รถวิ่ง */
-            scroll-behavior: smooth; 
+            padding-bottom: 50px; /* เพิ่มพื้นที่ด้านล่างเผื่อให้ Bar */
+            scroll-behavior: smooth;
+            overflow-x: hidden; /* คืนค่าตามที่ขอ */
         }
 
-        /* --- Progress Bar & Car Animation (แก้ไขใหม่) --- */
+        /* --- Progress Bar (ด้านล่าง) --- */
         .progress-wrapper {
             position: fixed;
-            top: 0;
+            bottom: 0; /* ย้ายลงมาข้างล่าง */
             left: 0;
             width: 100%;
-            height: 30px; /* เพิ่มความสูงพื้นที่รวมเพื่อให้รถไม่ขาด */
-            z-index: 2000;
-            pointer-events: none; /* เพื่อให้กดทะลุไปโดนปุ่มข้างล่างได้ */
-        }
-
-        .progress-track {
-            position: absolute;
-            bottom: 0;
-            width: 100%;
-            height: 8px; /* ความหนาถนน */
+            height: 12px; /* ความสูงถนน */
             background: #e0e0e0;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            z-index: 2000;
+            box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
         }
 
         .progress-bar {
@@ -58,7 +51,7 @@
             background-color: var(--bar-color);
             position: relative;
             
-            /* ลายถนนวิ่งๆ */
+            /* ลายถนน */
             background-image: linear-gradient(
                 45deg,
                 rgba(255, 255, 255, 0.3) 25%,
@@ -72,7 +65,7 @@
             background-size: 20px 20px;
             animation: moveStripes 1s linear infinite; 
             transition: width 0.5s ease;
-            border-radius: 0 4px 4px 0;
+            border-radius: 0 4px 0 0;
         }
 
         /* ตัวรถ */
@@ -81,13 +74,13 @@
             font-family: "Font Awesome 6 Free";
             font-weight: 900;
             position: absolute;
-            right: -10px; /* ขยับรถเข้ามานิดนึงกันตกขอบขวา */
-            bottom: 4px;   /* ยกรถขึ้นวางบนถนน */
-            font-size: 24px;
+            right: -15px; /* ดันรถไปข้างหน้า */
+            bottom: 6px;  /* ยกรถลอยขึ้นเหนือ Bar เล็กน้อย เพื่อให้เห็นล้อครบ */
+            font-size: 28px; /* ขนาดรถ */
             color: #FF4500;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
             z-index: 2001;
-            transform: scaleX(-1); /* กลับหัวรถ */
+            transform: scaleX(-1);
         }
 
         @keyframes moveStripes {
@@ -102,7 +95,9 @@
             padding: 25px 20px;
             text-align: center;
             box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-            /* เอา sticky ออกจาก header ชั่วคราวเพื่อให้ไม่ทับรถ หรือถ้าอยากใช้ sticky ต้องปรับ top */
+            position: sticky;
+            top: 0;
+            z-index: 1000;
         }
 
         header h1 { margin: 0; font-size: 2em; }
@@ -180,8 +175,9 @@
             box-shadow: 0 0 0 4px rgba(255, 69, 0, 0.3); transform: scale(1.3);
         }
 
+        /* FAB Button (ขยับขึ้นนิดนึงหนี Bar) */
         .fab-btn {
-            position: fixed; bottom: 30px; right: 30px;
+            position: fixed; bottom: 50px; right: 30px; /* ขยับขึ้นเป็น 50px */
             background-color: #FF4500; color: white;
             width: 60px; height: 60px; border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
@@ -232,12 +228,6 @@
 </head>
 <body>
 
-<div class="progress-wrapper">
-    <div class="progress-track">
-        <div class="progress-bar" id="tripProgress"></div>
-    </div>
-</div>
-
 <header>
     <h1><i class="fas fa-map-marked-alt"></i> Trip Planner</h1>
     <div id="live-clock">Loading...</div>
@@ -247,6 +237,10 @@
     <div id="loading"><i class="fas fa-spinner fa-spin"></i> กำลังโหลดข้อมูล...</div>
     <ul class="timeline" id="timeline-container"></ul>
     <div id="debug-area"></div>
+</div>
+
+<div class="progress-wrapper">
+    <div class="progress-bar" id="tripProgress"></div>
 </div>
 
 <button class="fab-btn" onclick="openModal()"><i class="fas fa-plus"></i></button>
@@ -355,7 +349,6 @@
             if (now >= new Date(dtStr)) activeIndex = index;
         });
 
-        // Calculate Progress (0-100%)
         const totalItems = items.length;
         const progressPercent = totalItems > 0 ? ((activeIndex + 1) / totalItems) * 100 : 0;
         document.getElementById('tripProgress').style.width = `${progressPercent}%`;
