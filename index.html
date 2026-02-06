@@ -28,17 +28,27 @@
             color: var(--dark-text);
             margin: 0;
             padding: 0;
+            padding-top: 20px; /* เพิ่มพื้นที่ด้านบนให้รถวิ่ง */
             scroll-behavior: smooth; 
         }
 
-        /* --- Progress Bar & Car Animation (แก้ใหม่ตรงนี้) --- */
-        .progress-container {
+        /* --- Progress Bar & Car Animation (แก้ไขใหม่) --- */
+        .progress-wrapper {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 30px; /* เพิ่มความสูงพื้นที่รวมเพื่อให้รถไม่ขาด */
+            z-index: 2000;
+            pointer-events: none; /* เพื่อให้กดทะลุไปโดนปุ่มข้างล่างได้ */
+        }
+
+        .progress-track {
+            position: absolute;
+            bottom: 0;
             width: 100%;
             height: 8px; /* ความหนาถนน */
             background: #e0e0e0;
-            position: fixed;
-            top: 0;
-            z-index: 2000;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
 
@@ -46,7 +56,7 @@
             height: 100%;
             width: 0%;
             background-color: var(--bar-color);
-            position: relative; /* เพื่อให้รถเกาะติดได้ */
+            position: relative;
             
             /* ลายถนนวิ่งๆ */
             background-image: linear-gradient(
@@ -65,19 +75,19 @@
             border-radius: 0 4px 4px 0;
         }
 
-        /* สร้างรูปรถที่ปลายหลอด */
+        /* ตัวรถ */
         .progress-bar::after {
-            content: '\f5e4'; /* รหัสไอคอนรถ (Car Side) ของ Font Awesome */
+            content: '\f5e4'; /* ไอคอนรถ */
             font-family: "Font Awesome 6 Free";
             font-weight: 900;
             position: absolute;
-            right: -20px; /* ดันรถให้อยู่หน้าหลอด */
-            top: -10px;   /* จัดตำแหน่งแนวตั้งให้รถวางบนเส้นพอดี */
-            font-size: 24px; /* ขนาดรถ */
-            color: #FF4500;  /* สีรถ (ส้ม) */
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3); /* เงารถ */
+            right: -10px; /* ขยับรถเข้ามานิดนึงกันตกขอบขวา */
+            bottom: 4px;   /* ยกรถขึ้นวางบนถนน */
+            font-size: 24px;
+            color: #FF4500;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
             z-index: 2001;
-            transform: scaleX(-1); /* กลับด้านรถให้หันหน้าไปทางขวา */
+            transform: scaleX(-1); /* กลับหัวรถ */
         }
 
         @keyframes moveStripes {
@@ -92,9 +102,7 @@
             padding: 25px 20px;
             text-align: center;
             box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-            position: sticky;
-            top: 0; 
-            z-index: 1000;
+            /* เอา sticky ออกจาก header ชั่วคราวเพื่อให้ไม่ทับรถ หรือถ้าอยากใช้ sticky ต้องปรับ top */
         }
 
         header h1 { margin: 0; font-size: 2em; }
@@ -224,8 +232,10 @@
 </head>
 <body>
 
-<div class="progress-container">
-    <div class="progress-bar" id="tripProgress"></div>
+<div class="progress-wrapper">
+    <div class="progress-track">
+        <div class="progress-bar" id="tripProgress"></div>
+    </div>
 </div>
 
 <header>
