@@ -28,18 +28,18 @@
             color: var(--dark-text);
             margin: 0;
             padding: 0;
-            padding-bottom: 50px; /* เพิ่มพื้นที่ด้านล่างเผื่อให้ Bar */
+            padding-bottom: 50px;
             scroll-behavior: smooth;
-            overflow-x: hidden; /* คืนค่าตามที่ขอ */
+            overflow-x: hidden;
         }
 
-        /* --- Progress Bar (ด้านล่าง) --- */
+        /* --- Progress Bar --- */
         .progress-wrapper {
             position: fixed;
-            bottom: 0; /* ย้ายลงมาข้างล่าง */
+            bottom: 0;
             left: 0;
             width: 100%;
-            height: 12px; /* ความสูงถนน */
+            height: 12px;
             background: #e0e0e0;
             z-index: 2000;
             box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
@@ -50,8 +50,6 @@
             width: 0%;
             background-color: var(--bar-color);
             position: relative;
-            
-            /* ลายถนน */
             background-image: linear-gradient(
                 45deg,
                 rgba(255, 255, 255, 0.3) 25%,
@@ -68,19 +66,21 @@
             border-radius: 0 4px 0 0;
         }
 
-        /* ตัวรถ */
+        /* --- แก้ไขทิศทางรถตรงนี้ --- */
         .progress-bar::after {
             content: '\f5e4'; /* ไอคอนรถ */
             font-family: "Font Awesome 6 Free";
             font-weight: 900;
             position: absolute;
-            right: -15px; /* ดันรถไปข้างหน้า */
-            bottom: 6px;  /* ยกรถลอยขึ้นเหนือ Bar เล็กน้อย เพื่อให้เห็นล้อครบ */
-            font-size: 28px; /* ขนาดรถ */
+            right: -15px;
+            bottom: 6px;
+            font-size: 28px;
             color: #FF4500;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
             z-index: 2001;
-            transform: scaleX(-1);
+            
+            /* เปลี่ยนจาก -1 เป็น 1 เพื่อให้หันหน้าไปทางขวาตามปกติ */
+            transform: scaleX(1); 
         }
 
         @keyframes moveStripes {
@@ -175,9 +175,8 @@
             box-shadow: 0 0 0 4px rgba(255, 69, 0, 0.3); transform: scale(1.3);
         }
 
-        /* FAB Button (ขยับขึ้นนิดนึงหนี Bar) */
         .fab-btn {
-            position: fixed; bottom: 50px; right: 30px; /* ขยับขึ้นเป็น 50px */
+            position: fixed; bottom: 50px; right: 30px;
             background-color: #FF4500; color: white;
             width: 60px; height: 60px; border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
@@ -240,7 +239,9 @@
 </div>
 
 <div class="progress-wrapper">
-    <div class="progress-bar" id="tripProgress"></div>
+    <div class="progress-track">
+        <div class="progress-bar" id="tripProgress"></div>
+    </div>
 </div>
 
 <button class="fab-btn" onclick="openModal()"><i class="fas fa-plus"></i></button>
@@ -349,6 +350,7 @@
             if (now >= new Date(dtStr)) activeIndex = index;
         });
 
+        // Calculate Progress (0-100%)
         const totalItems = items.length;
         const progressPercent = totalItems > 0 ? ((activeIndex + 1) / totalItems) * 100 : 0;
         document.getElementById('tripProgress').style.width = `${progressPercent}%`;
